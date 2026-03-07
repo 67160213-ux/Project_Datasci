@@ -19,7 +19,9 @@ def load_model():
     model    = joblib.load("ufo_model.pkl")
     features = joblib.load("ufo_features.pkl")
     meta     = joblib.load("ufo_meta.pkl")
-    return model, features, meta
+    # โหลด RF แยกสำหรับ Feature Importance (มี feature_importances_ เสมอ)
+    rf_model = joblib.load("ufo_rf_model.pkl") if os.path.exists("ufo_rf_model.pkl") else model
+    return model, features, meta, rf_model
 
 @st.cache_data
 def load_data():
@@ -38,11 +40,12 @@ def load_data():
     return df
 
 try:
-    model, features, meta = load_model()
+    model, features, meta, rf_model = load_model()
     df = load_data()
     model_loaded = True
 except Exception as e:
     model_loaded = False
+    rf_model = None
     st.warning(f"⚠️ ยังไม่พบ model file — กรุณา run notebook ก่อน ({e})")
     df = load_data()
 
@@ -197,9 +200,10 @@ elif page == "📊 Feature Importance":
         st.error("กรุณา run notebook ก่อน")
     else:
         try:
-            inner_model = model.named_steps['model']
+            # ใช้ RF model เสมอ เพราะมี feature_importances_ แน่นอน
+            inner_model = rf_model.named_steps['model']
         except Exception:
-            inner_model = model
+            inner_model = rf_model
 
         if hasattr(inner_model, 'feature_importances_'):
             fi = pd.Series(inner_model.feature_importances_, index=features).sort_values(ascending=False)
