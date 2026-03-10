@@ -31,7 +31,7 @@ def get_base64(bin_file):
     except FileNotFoundError:
         return None
 
-bin_str = get_base64('image_5e39f4.png')
+bin_str = get_base64('645465453_1628827254986805_4766609008495813782_n.jpg')
 
 # ─────────────────────────────────────────────
 # 3. Custom CSS (Glassmorphism Style)
