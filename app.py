@@ -69,15 +69,12 @@ st.markdown("""
 # ─────────────────────────────────────────────
 @st.cache_resource
 def load_models():
-    # เพิ่ม "model/" นำหน้าชื่อไฟล์ทั้งหมดตามโครงสร้างใน GitHub ของคุณ
+    # แก้ไข Path ให้เข้าโฟลเดอร์ model/
     model_A  = joblib.load("model/model_monthly_count.pkl")
     model_B  = joblib.load("model/model_shape_classifier.pkl")
     model_C  = joblib.load("model/model_day_probability.pkl")
     le_shape = joblib.load("model/label_encoder_shape.pkl")
     le_day   = joblib.load("model/label_encoder_day.pkl")
-    
-    # สำหรับ last_year_data.pkl หากคุณใช้ไฟล์ predictions_2026.pkl แทน 
-    # ให้เปลี่ยนชื่อที่นี่ครับ (ในที่นี้อ้างอิงตามชื่อตัวแปรเดิม)
     last_yr  = joblib.load("model/predictions_2026.pkl") 
     
     return model_A, model_B, model_C, le_shape, le_day, last_yr
@@ -106,8 +103,8 @@ SHAPE_DESC = {
     "triangle": "ทรงสามเหลี่ยม",
     "circle":   "ทรงกลม/วงกลม",
     "fireball": "ลูกไฟ",
-    "disk":     "จานบิน",
-    "sphere":   "ทรงกลมสมบูรณ์",
+    "disk":      "จานบิน",
+    "sphere":    "ทรงกลมสมบูรณ์",
     "other":    "รูปร่างอื่นๆ",
     "unknown":  "ไม่ทราบรูปร่าง",
 }
@@ -121,9 +118,14 @@ def predict_monthly_count(month: int, year: int = 2026):
     is_summer   = 1 if month in [6,7,8] else 0
     is_holiday  = 1 if month in [7,12] else 0
     lag1_month  = month - 1 if month > 1 else 12
-    count_lag1  = last_yr.get(lag1_month, last_yr.mean())
-    count_lag12 = last_yr.get(month,      last_yr.mean())
-    rolling_mean_3 = last_yr.mean()
+    
+    # แก้ไขจุดที่เกิด TypeError: ระบุ numeric_only=True เพื่อคำนวณค่าเฉลี่ยเฉพาะที่เป็นตัวเลข
+    avg_val = last_yr.mean(numeric_only=True).iloc[0] if isinstance(last_yr, pd.DataFrame) else last_yr.mean()
+    
+    count_lag1  = last_yr.get(lag1_month, avg_val)
+    count_lag12 = last_yr.get(month,      avg_val)
+    rolling_mean_3 = avg_val
+    
     row = pd.DataFrame([{
         "month": month, "season": season,
         "is_summer": is_summer, "is_holiday_month": is_holiday,
@@ -135,6 +137,7 @@ def predict_monthly_count(month: int, year: int = 2026):
     pred = model_A.predict(row)[0]
     return max(1, int(round(pred)))
 
+# ... (ฟังก์ชัน predict_shapes, predict_days, predict_all_months และส่วน UI อื่นๆ คงเดิมตามสคริปต์ของคุณ)
 
 def predict_shapes(month: int):
     season     = SEASON_MAP[month]
@@ -162,7 +165,6 @@ def predict_shapes(month: int):
         })
     return results, proba_avg
 
-
 def predict_days(month: int, year: int = 2026):
     season     = SEASON_MAP[month]
     is_summer  = 1 if month in [6,7,8] else 0
@@ -179,7 +181,6 @@ def predict_days(month: int, year: int = 2026):
         level = le_day.inverse_transform([enc])[0]
         results.append({"day": d, "level": level})
     return pd.DataFrame(results)
-
 
 def predict_all_months(year: int = 2026):
     return [predict_monthly_count(m, year) for m in range(1, 13)]
