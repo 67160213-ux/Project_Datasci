@@ -69,12 +69,17 @@ st.markdown("""
 # ─────────────────────────────────────────────
 @st.cache_resource
 def load_models():
-    model_A  = joblib.load("model_monthly_count.pkl")
-    model_B  = joblib.load("model_shape_classifier.pkl")
-    model_C  = joblib.load("model_day_probability.pkl")
-    le_shape = joblib.load("label_encoder_shape.pkl")
-    le_day   = joblib.load("label_encoder_day.pkl")
-    last_yr  = joblib.load("last_year_data.pkl")
+    # เพิ่ม "model/" นำหน้าชื่อไฟล์ทั้งหมดตามโครงสร้างใน GitHub ของคุณ
+    model_A  = joblib.load("model/model_monthly_count.pkl")
+    model_B  = joblib.load("model/model_shape_classifier.pkl")
+    model_C  = joblib.load("model/model_day_probability.pkl")
+    le_shape = joblib.load("model/label_encoder_shape.pkl")
+    le_day   = joblib.load("model/label_encoder_day.pkl")
+    
+    # สำหรับ last_year_data.pkl หากคุณใช้ไฟล์ predictions_2026.pkl แทน 
+    # ให้เปลี่ยนชื่อที่นี่ครับ (ในที่นี้อ้างอิงตามชื่อตัวแปรเดิม)
+    last_yr  = joblib.load("model/predictions_2026.pkl") 
+    
     return model_A, model_B, model_C, le_shape, le_day, last_yr
 
 try:
@@ -82,7 +87,7 @@ try:
     models_ok = True
 except Exception as e:
     models_ok = False
-    st.error(f"❌ ไม่พบไฟล์โมเดล: {e}\nกรุณาวางไฟล์ .pkl ทั้งหมดไว้ในโฟลเดอร์เดียวกับ app.py")
+    st.error(f"❌ ไม่พบไฟล์โมเดลในโฟลเดอร์ model/: {e}")
 
 # ─────────────────────────────────────────────
 # Constants
